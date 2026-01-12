@@ -12,6 +12,8 @@
         .screen.active { display: block; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0 env(safe-area-inset-bottom); border-top: 1px solid #e2e8f0; z-index: 50; }
+        nav button { color: #64748b; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        nav button.active { color: var(--primary); font-weight: 700; }
         .check-circle { width: 44px; height: 44px; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: 0.2s; }
         .state-taken { background: var(--success); border-color: var(--success); color: white; }
         .state-missed { background: var(--danger); border-color: var(--danger); color: white; }
@@ -21,17 +23,17 @@
 <body class="pb-24">
 
     <div id="auth-section" class="flex items-center justify-center min-h-screen p-6">
-        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl">
-            <h1 class="text-2xl font-black text-center mb-6">Secure Med Tracker</h1>
-            <input type="email" id="login-email" placeholder="Email" class="w-full p-4 mb-4 rounded-2xl bg-slate-50 border-none outline-none">
-            <input type="password" id="login-password" placeholder="Password" class="w-full p-4 mb-6 rounded-2xl bg-slate-50 border-none outline-none">
-            <button id="login-btn" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold">Sign In / Register</button>
+        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h1 class="text-2xl font-black text-center mb-6 text-slate-800">Secure Med Tracker</h1>
+            <input type="email" id="login-email" placeholder="Email" class="w-full p-4 mb-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-4 mb-6 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="login-btn" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold shadow-lg">Sign In / Register</button>
         </div>
     </div>
 
     <div id="tracker-section" class="hidden">
         <header class="bg-white p-6 border-b flex justify-between items-center sticky top-0 z-40">
-            <h2 class="text-xl font-bold">PillTracker</h2>
+            <h2 class="text-xl font-bold text-slate-900">PillTracker</h2>
             <button id="logout-btn" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1 rounded-lg">LOGOUT</button>
         </header>
 
@@ -39,14 +41,14 @@
             
             <section id="screen-add" class="screen active space-y-4">
                 <div class="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
-                    <h3 class="font-bold text-slate-800">Add/Edit Medication</h3>
+                    <h3 id="manage-title" class="font-bold text-slate-800">Add Medication</h3>
                     <input type="text" id="pillInput" placeholder="Med Name" class="w-full p-3 border rounded-xl outline-none focus:border-indigo-500">
                     
                     <div class="flex flex-wrap gap-2 text-xs font-bold">
                         <label class="flex items-center gap-1 bg-slate-50 p-2 rounded-lg border cursor-pointer"><input type="checkbox" id="check-morning"> Morning</label>
                         <label class="flex items-center gap-1 bg-slate-50 p-2 rounded-lg border cursor-pointer"><input type="checkbox" id="check-afternoon"> Noon</label>
                         <label class="flex items-center gap-1 bg-slate-50 p-2 rounded-lg border cursor-pointer"><input type="checkbox" id="check-night"> Night</label>
-                        <label class="flex items-center gap-1 bg-indigo-50 text-indigo-600 p-2 rounded-lg border border-indigo-200 cursor-pointer"><input type="checkbox" id="check-prn"> As Needed (PRN)</label>
+                        <label class="flex items-center gap-1 bg-indigo-50 text-indigo-600 p-2 rounded-lg border border-indigo-200 cursor-pointer"><input type="checkbox" id="check-prn"> As Needed</label>
                     </div>
                     
                     <button id="add-pill-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-black">SAVE MEDICATION</button>
@@ -55,23 +57,31 @@
             </section>
 
             <section id="screen-track" class="screen space-y-8">
-                <p id="todayDateDisplay" class="text-center text-sm font-bold text-slate-400"></p>
-                <div id="slot-morning" class="hidden"><h4 class="text-xs font-black text-orange-500 uppercase mb-3">☀️ Morning</h4><div class="list space-y-3"></div></div>
-                <div id="slot-afternoon" class="hidden"><h4 class="text-xs font-black text-blue-500 uppercase mb-3">🌤️ Noon</h4><div class="list space-y-3"></div></div>
-                <div id="slot-night" class="hidden"><h4 class="text-xs font-black text-indigo-700 uppercase mb-3">🌙 Night</h4><div class="list space-y-3"></div></div>
-                <div id="slot-prn" class="hidden"><h4 class="text-xs font-black text-slate-500 uppercase mb-3">🩹 As Needed</h4><div class="list space-y-3"></div></div>
+                <p id="todayDateDisplay" class="text-center text-sm font-bold text-slate-400 uppercase tracking-widest"></p>
+                <div id="tracker-container" class="space-y-8">
+                    <div id="slot-morning" class="hidden"><h4 class="text-xs font-black text-orange-500 uppercase mb-3">☀️ Morning</h4><div class="list space-y-3"></div></div>
+                    <div id="slot-afternoon" class="hidden"><h4 class="text-xs font-black text-blue-500 uppercase mb-3">🌤️ Noon</h4><div class="list space-y-3"></div></div>
+                    <div id="slot-night" class="hidden"><h4 class="text-xs font-black text-indigo-700 uppercase mb-3">🌙 Night</h4><div class="list space-y-3"></div></div>
+                    <div id="slot-prn" class="hidden"><h4 class="text-xs font-black text-slate-500 uppercase mb-3">🩹 As Needed</h4><div class="list space-y-3"></div></div>
+                </div>
             </section>
 
             <section id="screen-stats" class="screen space-y-4">
-                <h3 class="text-lg font-bold">History Log</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-slate-800">History Log</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportReport()" class="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-2 rounded-full border border-indigo-100 uppercase">Export</button>
+                        <button onclick="clearAllHistory()" class="text-[10px] font-black bg-red-50 text-red-600 px-3 py-2 rounded-full border border-red-100 uppercase">Clear All</button>
+                    </div>
+                </div>
                 <div id="historyByDate" class="space-y-6"></div>
             </section>
         </main>
 
         <nav>
-            <button onclick="showScreen('add')" id="nav-add" class="active">📋 Meds</button>
-            <button onclick="showScreen('track')" id="nav-track">✅ Today</button>
-            <button onclick="showScreen('stats')" id="nav-stats">📊 Stats</button>
+            <button onclick="showScreen('add')" id="nav-add" class="active"><span>📋</span>Meds</button>
+            <button onclick="showScreen('track')" id="nav-track"><span>✅</span>Today</button>
+            <button onclick="showScreen('stats')" id="nav-stats"><span>📊</span>Stats</button>
         </nav>
     </div>
 
@@ -81,12 +91,13 @@
         import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyBy4FKc0uWiFQY8gE1HvZVsKH0D1yhpyQw",
-          authDomain: "pill-tracker-dd696.firebaseapp.com",
-          projectId: "pill-tracker-dd696",
-          storageBucket: "pill-tracker-dd696.firebasestorage.app",
-          messagingSenderId: "361802253192",
-          appId: "1:361802253192:web:589bae4508ceae4a20303d"
+            apiKey: "AIzaSyBy4FKc0uWiFQY8gE1HvZVsKH0D1yhpyQw",
+            authDomain: "pill-tracker-dd696.firebaseapp.com",
+            projectId: "pill-tracker-dd696",
+            storageBucket: "pill-tracker-dd696.firebasestorage.app",
+            messagingSenderId: "361802253192",
+            appId: "1:361802253192:web:589bae4508ceae4a20303d",
+            measurementId: "G-DGQ2NT1YWG"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -125,6 +136,7 @@
                 document.getElementById('tracker-section').classList.remove('hidden');
                 startSync();
             } else {
+                userId = '';
                 document.getElementById('auth-section').classList.remove('hidden');
                 document.getElementById('tracker-section').classList.add('hidden');
             }
@@ -135,26 +147,23 @@
             onSnapshot(query(collection(db, `users/${userId}/history`), orderBy('timestamp', 'desc')), (s) => { globalHistory = s.docs.map(d => ({id: d.id, ...d.data()})); render(); });
         }
 
-        // SAVE / UPDATE MEDICATION
         document.getElementById('add-pill-btn').addEventListener('click', async () => {
             const name = document.getElementById('pillInput').value.trim();
-            const schedule = {
+            const sched = {
                 morning: document.getElementById('check-morning').checked,
                 afternoon: document.getElementById('check-afternoon').checked,
                 night: document.getElementById('check-night').checked,
                 prn: document.getElementById('check-prn').checked
             };
-
             if(!name) return;
-
             if(currentEditId) {
-                await setDoc(doc(db, `users/${userId}/pills`, currentEditId), { name, ...schedule }, { merge: true });
+                await setDoc(doc(db, `users/${userId}/pills`, currentEditId), { name, ...sched }, { merge: true });
                 currentEditId = null;
                 document.getElementById('add-pill-btn').innerText = "SAVE MEDICATION";
+                document.getElementById('manage-title').innerText = "Add Medication";
             } else {
-                await addDoc(collection(db, `users/${userId}/pills`), { name, ...schedule });
+                await addDoc(collection(db, `users/${userId}/pills`), { name, ...sched });
             }
-
             document.getElementById('pillInput').value = '';
             document.querySelectorAll('#screen-add input[type="checkbox"]').forEach(c => c.checked = false);
             render();
@@ -169,6 +178,7 @@
             document.getElementById('check-night').checked = p.night;
             document.getElementById('check-prn').checked = p.prn;
             document.getElementById('add-pill-btn').innerText = "UPDATE MEDICATION";
+            document.getElementById('manage-title').innerText = "Editing: " + p.name;
             window.scrollTo(0,0);
         };
 
@@ -176,7 +186,6 @@
             const local = getLocalData();
             const logId = `${local.id}_${pillId}_${time}`;
             const current = globalHistory.find(h => h.id === logId);
-
             if (!current) {
                 await setDoc(doc(db, `users/${userId}/history`, logId), {
                     status: 'taken', pillName, timeSlot: time, dateDisplay: local.display, dateId: local.id,
@@ -189,34 +198,48 @@
             }
         };
 
+        window.clearAllHistory = async () => {
+            if (globalHistory.length === 0) return alert("No history to clear.");
+            if (confirm("Clear ALL history? This cannot be undone.") && confirm("Are you ABSOLUTELY sure?")) {
+                const promises = globalHistory.map(r => deleteDoc(doc(db, `users/${userId}/history`, r.id)));
+                await Promise.all(promises);
+                alert("History wiped.");
+            }
+        };
+
+        window.exportReport = () => {
+            let report = `MEDICATION REPORT\nGenerated: ${new Date().toLocaleString()}\n\n`;
+            globalHistory.slice(0, 50).forEach(h => {
+                report += `[${h.dateDisplay} ${h.displayTime}] ${h.pillName} - ${h.status.toUpperCase()}\n`;
+            });
+            const win = window.open("", "Report", "width=600,height=800");
+            win.document.write(`<pre style="font-family:monospace; padding:20px;">${report}</pre>`);
+        };
+
         function render() {
             const local = getLocalData();
             document.getElementById('todayDateDisplay').innerText = local.verbose;
 
-            // 1. Render Manage List
             document.getElementById('manageList').innerHTML = userPills.map(p => `
                 <div class="bg-white p-4 rounded-2xl flex justify-between items-center border">
-                    <div>
-                        <div class="font-bold">${p.name}</div>
+                    <div><div class="font-bold">${p.name}</div>
                         <div class="flex gap-1 mt-1">
-                            ${p.morning ? '<span class="time-chip">AM</span>':''} ${p.afternoon ? '<span class="time-chip">NOON</span>':''} ${p.night ? '<span class="time-chip">PM</span>':''} ${p.prn ? '<span class="time-chip bg-indigo-100 border-none text-indigo-600 font-black">PRN</span>':''}
+                            ${p.morning ? '<span class="time-chip">AM</span>':''} ${p.afternoon ? '<span class="time-chip">NOON</span>':''} ${p.night ? '<span class="time-chip">PM</span>':''} ${p.prn ? '<span class="time-chip bg-indigo-50 border-indigo-200 text-indigo-600">PRN</span>':''}
                         </div>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex gap-3">
                         <button onclick="editPill('${p.id}')" class="text-xs font-bold text-indigo-500 uppercase">Edit</button>
                         <button onclick="removePill('${p.id}')" class="text-xs font-bold text-red-400 uppercase">Delete</button>
                     </div>
                 </div>
             `).join('');
 
-            // 2. Render Tracker (Dynamic Slots)
-            const slots = ['morning', 'afternoon', 'night', 'prn'];
-            slots.forEach(slot => {
-                const filteredPills = userPills.filter(p => p[slot]);
+            ['morning', 'afternoon', 'night', 'prn'].forEach(slot => {
+                const filtered = userPills.filter(p => p[slot]);
                 const container = document.getElementById(`slot-${slot}`);
-                if (filteredPills.length > 0) {
+                if (filtered.length > 0) {
                     container.classList.remove('hidden');
-                    container.querySelector('.list').innerHTML = filteredPills.map(p => {
+                    container.querySelector('.list').innerHTML = filtered.map(p => {
                         const h = globalHistory.find(x => x.id === `${local.id}_${p.id}_${slot}`);
                         return `
                             <div class="bg-white p-4 rounded-3xl flex justify-between items-center border shadow-sm">
@@ -225,38 +248,31 @@
                             </div>
                         `;
                     }).join('');
-                } else {
-                    container.classList.add('hidden');
-                }
+                } else { container.classList.add('hidden'); }
             });
 
-            // 3. Render Stats (Grouped by Date then Time)
             const historyByDate = {};
             globalHistory.forEach(h => {
                 if(!historyByDate[h.dateDisplay]) historyByDate[h.dateDisplay] = [];
                 historyByDate[h.dateDisplay].push(h);
             });
-
             document.getElementById('historyByDate').innerHTML = Object.keys(historyByDate).map(date => {
                 const logs = historyByDate[date].sort((a,b) => {
                     const order = { morning: 1, afternoon: 2, night: 3, prn: 4 };
                     return order[a.timeSlot] - order[b.timeSlot];
                 });
-
                 return `
                     <div class="space-y-2">
-                        <h4 class="text-sm font-black text-slate-400 px-1">${date}</h4>
-                        <div class="space-y-2">
-                            ${logs.map(log => `
-                                <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
-                                    <div><span class="text-[10px] font-black text-slate-400 uppercase">${log.timeSlot}</span><div class="font-bold text-sm">${log.pillName}</div></div>
-                                    <div class="text-xs font-black ${log.status === 'taken' ? 'text-emerald-500' : 'text-red-500'}">${log.status.toUpperCase()} @ ${log.displayTime}</div>
-                                </div>
-                            `).join('')}
-                        </div>
+                        <h4 class="text-xs font-black text-slate-400 px-1 uppercase">${date}</h4>
+                        <div class="space-y-2">${logs.map(log => `
+                            <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
+                                <div><span class="text-[9px] font-black text-slate-400 uppercase">${log.timeSlot}</span><div class="font-bold text-sm">${log.pillName}</div></div>
+                                <div class="text-xs font-black ${log.status === 'taken' ? 'text-emerald-500' : 'text-red-500'}">${log.status.toUpperCase()} @ ${log.displayTime}</div>
+                            </div>
+                        `).join('')}</div>
                     </div>
                 `;
-            }).join('');
+            }).join('') || '<div class="text-center p-10 text-slate-400">No history found.</div>';
         }
 
         window.removePill = async (id) => { if(confirm('Delete medication?')) await deleteDoc(doc(db, `users/${userId}/pills/${id}`)); };
