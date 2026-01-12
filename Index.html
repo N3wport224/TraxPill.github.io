@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PillTracker</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; text-align: center; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .pill-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .pill-info { display: flex; align-items: center; gap: 10px; }
+        .toggle-btn { width: 50px; height: 26px; border-radius: 13px; border: none; background: #ccc; position: relative; cursor: pointer; transition: 0.3s; }
+        .toggle-btn.taken { background: #34a853; }
+        .toggle-circle { width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; left: 2px; top: 2px; transition: 0.3s; }
+        .toggle-btn.taken .toggle-circle { left: 26px; }
+        .delete-btn { color: #d93025; font-size: 12px; cursor: pointer; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>My Meds</h2>
+    <div class="input-group">
+        <input type="text" id="pillName" placeholder="Pill name (e.g. Vitamin D)">
+        <button onclick="addPill()">Add</button>
+    </div>
+    <div id="pillList"></div>
+</div>
+
+<script>
+    let pills = JSON.parse(localStorage.getItem('myPills')) || [];
+
+    function saveAndRender() {
+        localStorage.setItem('myPills', JSON.stringify(pills));
+        const list = document.getElementById('pillList');
+        list.innerHTML = '';
+        
+        pills.forEach((pill, index) => {
+            const div = document.createElement('div');
+            div.className = 'pill-item';
+            div.innerHTML = `
+                <div class="pill-info">
+                    <span>${pill.name}</span>
+                    <span class="delete-btn" onclick="deletePill(${index})">Delete</span>
+                </div>
+                <button class="toggle-btn ${pill.taken ? 'taken' : ''}" onclick="togglePill(${index})">
+                    <div class="toggle-circle"></div>
+                </button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function addPill() {
+        const name = document.getElementById('pillName').value;
+        if (name) {
+            pills.push({ name, taken: false });
+            document.getElementById('pillName').value = '';
+            saveAndRender();
+        }
+    }
+
+    function togglePill(index) {
+        pills[index].taken = !pills[index].taken;
+        saveAndRender();
+    }
+
+    function deletePill(index) {
+        pills.splice(index, 1);
+        saveAndRender();
+    }
+
+    saveAndRender();
+</script>
+</body>
+</html>
