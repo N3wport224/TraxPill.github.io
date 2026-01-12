@@ -2,189 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PillTracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { 
-            --primary: #1a73e8; --morning: #ff9800; --afternoon: #03a9f4; --night: #3f51b5;
-            --success: #34a853; --bg: #f1f3f4; 
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: #202124; }
+        :root { --primary: #4f46e5; --morning: #f59e0b; --afternoon: #0ea5e9; --night: #4338ca; --success: #10b981; }
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .container { max-width: 500px; margin: auto; padding: 16px; }
-        h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+        /* Mobile-First Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #e2e8f0; z-index: 50; }
+        nav button { color: #64748b; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.2s; }
+        nav button.active { color: var(--primary); font-weight: 700; }
 
-        /* Navigation */
-        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #dadce0; z-index: 1000; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        nav button { background: none; border: none; color: #5f6368; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        nav button.active { color: var(--primary); }
-        nav .icon { font-size: 20px; }
-
-        /* Screens */
-        .screen { display: none; animation: fadeIn 0.3s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Cards & Inputs */
-        .card { background: white; padding: 16px; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .input-group { display: flex; gap: 8px; margin-bottom: 16px; }
-        input { flex: 1; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        .btn-add { padding: 0 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; }
-
-        /* Time Section Headers */
-        .time-header { display: flex; align-items: center; gap: 8px; font-weight: 700; margin: 24px 0 12px 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .morning { color: var(--morning); }
-        .afternoon { color: var(--afternoon); }
-        .night { color: var(--night); }
-
-        /* Pill Rows */
-        .pill-item { display: flex; justify-content: space-between; align-items: center; }
-        .pill-name { font-weight: 500; font-size: 17px; }
+        /* Large Touch Targets */
+        .check-circle { width: 44px; height: 44px; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .check-circle.checked { background: var(--success); border-color: var(--success); color: white; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); }
         
-        /* Checkbox Toggle (Mobile Friendly) */
-        .check-circle { 
-            width: 32px; height: 32px; border: 2px solid #dadce0; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-        }
-        .check-circle.checked { background: var(--success); border-color: var(--success); color: white; }
-        .check-circle.checked::after { content: '✓'; font-weight: bold; }
-
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
-        .dot { width: 100%; aspect-ratio: 1; border-radius: 4px; background: #e8eaed; font-size: 9px; display: flex; align-items: center; justify-content: center; }
-        .dot.active { background: var(--success); color: white; }
-
-        .delete-btn { color: #d93025; font-size: 12px; padding: 4px; cursor: pointer; opacity: 0.7; }
+        .log-card { border-left: 4px solid var(--primary); }
     </style>
 </head>
-<body>
+<body class="min-h-screen pb-24">
 
-<div class="container">
-    <div id="screen-add" class="screen active">
-        <h2>My Meds</h2>
-        <div class="input-group">
-            <input type="text" id="pillInput" placeholder="Pill name...">
-            <button class="btn-add" onclick="addPill()">Add</button>
-        </div>
-        <div id="manageList"></div>
-    </div>
-
-    <div id="screen-track" class="screen">
-        <h2>Daily Track</h2>
-        <p id="todayDate"></p>
-        
-        <div class="time-header morning">☀️ Morning</div>
-        <div id="list-morning"></div>
-
-        <div class="time-header afternoon">🌤️ Afternoon</div>
-        <div id="list-afternoon"></div>
-
-        <div class="time-header night">🌙 Night</div>
-        <div id="list-night"></div>
-    </div>
-
-    <div id="screen-stats" class="screen">
-        <h2>Overview</h2>
-        <div id="statsContent"></div>
-    </div>
-</div>
-
-<nav>
-    <button onclick="showScreen('add')" id="nav-add" class="active"><span class="icon">💊</span>Meds</button>
-    <button onclick="showScreen('track')" id="nav-track"><span class="icon">✅</span>Track</button>
-    <button onclick="showScreen('stats')" id="nav-stats"><span class="icon">📊</span>Stats</button>
-</nav>
-
-<script>
-    let pills = JSON.parse(localStorage.getItem('pills_v2')) || [];
-    let history = JSON.parse(localStorage.getItem('history_v2')) || {};
-
-    const times = ['morning', 'afternoon', 'night'];
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById('screen-'+id).classList.add('active');
-        document.getElementById('nav-'+id).classList.add('active');
-        render();
-    }
-
-    function addPill() {
-        const val = document.getElementById('pillInput').value.trim();
-        if(val) {
-            pills.push(val);
-            document.getElementById('pillInput').value = '';
-            save();
-        }
-    }
-
-    function deletePill(index) {
-        if(confirm('Delete this medication?')) {
-            pills.splice(index, 1);
-            save();
-        }
-    }
-
-    function togglePill(pillName, time) {
-        const today = new Date().toISOString().split('T')[0];
-        const key = `${today}_${pillName}_${time}`;
-        history[key] = !history[key];
-        save();
-    }
-
-    function save() {
-        localStorage.setItem('pills_v2', JSON.stringify(pills));
-        localStorage.setItem('history_v2', JSON.stringify(history));
-        render();
-    }
-
-    function render() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-
-        // Render Manage
-        document.getElementById('manageList').innerHTML = pills.map((p, i) => `
-            <div class="card pill-item">
-                <span class="pill-name">${p}</span>
-                <span class="delete-btn" onclick="deletePill(${i})">Remove</span>
+    <div id="auth-section" class="flex items-center justify-center min-h-screen p-6">
+        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-slate-800">Secure Meds</h1>
+                <p class="text-slate-500 mt-2">Private Health Tracking</p>
             </div>
-        `).join('');
+            
+            <div id="login-form" class="space-y-4">
+                <input type="email" id="login-email" placeholder="Email" class="w-full p-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="password" id="login-password" placeholder="Password" class="w-full p-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button id="login-btn" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">Sign In</button>
+                <p class="text-center text-sm text-slate-500">New user? <a href="#" id="show-signup-btn" class="text-indigo-600 font-bold underline">Create Account</a></p>
+            </div>
 
-        // Render Tracking
-        times.forEach(t => {
-            const container = document.getElementById('list-' + t);
-            container.innerHTML = pills.map(p => {
-                const key = `${today}_${p}_${t}`;
-                const checked = history[key];
-                return `
-                    <div class="card pill-item">
-                        <span class="pill-name">${p}</span>
-                        <div class="check-circle ${checked ? 'checked' : ''}" onclick="togglePill('${p}', '${t}')"></div>
+            <div id="signup-form" class="hidden space-y-4">
+                <input type="email" id="signup-email" placeholder="Email" class="w-full p-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="password" id="signup-password" placeholder="Password" class="w-full p-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button id="create-account-btn" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">Register</button>
+                <p class="text-center text-sm text-slate-500">Have an account? <a href="#" id="back-to-login-btn" class="text-indigo-600 font-bold underline">Log In</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tracker-section" class="hidden">
+        <header class="bg-white p-6 border-b flex justify-between items-center sticky top-0 z-40">
+            <h2 class="text-xl font-extrabold text-slate-900">PillTracker</h2>
+            <button id="logout-btn" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-2 rounded-xl">LOGOUT</button>
+        </header>
+
+        <main class="p-4 max-w-xl mx-auto space-y-6">
+            <section id="screen-add" class="screen active space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Medication List</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="pillInput" placeholder="Add pill (e.g. Vitamin C)" class="flex-1 p-4 rounded-2xl bg-white border border-slate-200 outline-none">
+                    <button id="add-pill-btn" class="bg-indigo-600 text-white px-6 rounded-2xl font-black">ADD</button>
+                </div>
+                <div id="manageList" class="space-y-2"></div>
+            </section>
+
+            <section id="screen-track" class="screen space-y-8">
+                <div class="text-center">
+                    <p id="todayDate" class="text-sm font-bold text-slate-400 uppercase tracking-widest"></p>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-morning font-black flex items-center gap-2 mb-3">☀️ MORNING</h4>
+                        <div id="list-morning" class="space-y-3"></div>
                     </div>
-                `;
-            }).join('');
-        });
+                    <div>
+                        <h4 class="text-afternoon font-black flex items-center gap-2 mb-3">🌤️ AFTERNOON</h4>
+                        <div id="list-afternoon" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-night font-black flex items-center gap-2 mb-3">🌙 NIGHT</h4>
+                        <div id="list-night" class="space-y-3"></div>
+                    </div>
+                </div>
+            </section>
 
-        // Render Stats (Last 7 days)
-        let statsHTML = '';
-        pills.forEach(p => {
-            let grid = '';
-            for(let i=6; i>=0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const dStr = d.toISOString().split('T')[0];
-                const dayName = d.toLocaleDateString('en-US', {weekday: 'narrow'});
-                // Check if all 3 times were taken (optional logic, showing morning for simplicity here)
-                const isTaken = history[`${dStr}_${p}_morning`] || history[`${dStr}_${p}_afternoon`] || history[`${dStr}_${p}_night`];
-                grid += `<div class="dot ${isTaken ? 'active' : ''}">${dayName}</div>`;
+            <section id="screen-stats" class="screen space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Intake History</h3>
+                <div id="activityLog" class="space-y-3"></div>
+            </section>
+        </main>
+
+        <nav class="safe-area-bottom">
+            <button onclick="showScreen('add')" id="nav-add" class="active"><span class="text-xl">📋</span>Meds</button>
+            <button onclick="showScreen('track')" id="nav-track"><span class="text-xl">✅</span>Today</button>
+            <button onclick="showScreen('stats')" id="nav-stats"><span class="text-xl">📊</span>Stats</button>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAMs4fq-aM3YJuBux2v4XRirGXGtW_bt4",
+            authDomain: "financial-tracker-705f1.firebaseapp.com",
+            projectId: "financial-tracker-705f1",
+            storageBucket: "financial-tracker-705f1.firebasestorage.app",
+            messagingSenderId: "284361332931",
+            appId: "1:284361332931:web:b287647d246eb70a49aa76"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let userId = '';
+        let userPills = [];
+        let globalHistory = [];
+        let listeners = [];
+
+        // UI NAVIGATION
+        window.showScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('screen-'+id).classList.add('active');
+            document.getElementById('nav-'+id).classList.add('active');
+            render();
+        };
+
+        // AUTH HANDLERS
+        const login = () => signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value).catch(e => alert(e.message));
+        const register = () => createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, document.getElementById('signup-password').value).catch(e => alert(e.message));
+        
+        document.getElementById('login-btn').addEventListener('click', login);
+        document.getElementById('create-account-btn').addEventListener('click', register);
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        document.getElementById('show-signup-btn').addEventListener('click', () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('signup-form').classList.remove('hidden'); });
+        document.getElementById('back-to-login-btn').addEventListener('click', () => { document.getElementById('signup-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); });
+
+        onAuthStateChanged(auth, (user) => {
+            listeners.forEach(unsub => unsub()); // Clean up listeners
+            if (user) {
+                userId = user.uid;
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('tracker-section').classList.remove('hidden');
+                startSync();
+            } else {
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('tracker-section').classList.add('hidden');
             }
-            statsHTML += `<div class="card"><strong>${p}</strong><div class="stats-grid">${grid}</div></div>`;
         });
-        document.getElementById('statsContent').innerHTML = statsHTML || '<p>No data yet.</p>';
-    }
 
-    render();
-</script>
+        // DATA SYNC
+        function startSync() {
+            // Sync Pills
+            const pillsUnsub = onSnapshot(collection(db, `users/${userId}/pills`), (snap) => {
+                userPills = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                render();
+            });
+            listeners.push(pillsUnsub);
+
+            // Sync History (Global flat collection for better stats)
+            const historyUnsub = onSnapshot(query(collection(db, `users/${userId}/history`), orderBy('timestamp', 'desc')), (snap) => {
+                globalHistory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                render();
+            });
+            listeners.push(historyUnsub);
+        }
+
+        // ACTIONS
+        document.getElementById('add-pill-btn').addEventListener('click', async () => {
+            const name = document.getElementById('pillInput').value.trim();
+            if(name) {
+                await addDoc(collection(db, `users/${userId}/pills`), { name, createdAt: serverTimestamp() });
+                document.getElementById('pillInput').value = '';
+            }
+        });
+
+        window.togglePill = async (pillId, pillName, time) => {
+            const today = new Date().toISOString().split('T')[0];
+            const logId = `${today}_${pillId}_${time}`;
+            const exists = globalHistory.find(h => h.id === logId);
+
+            if (exists) {
+                await deleteDoc(doc(db, `users/${userId}/history`, logId));
+            } else {
+                await setDoc(doc(db, `users/${userId}/history`, logId), {
+                    pillId, pillName, timeSlot: time, date: today,
+                    timestamp: serverTimestamp(),
+                    displayTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+        };
+
+        window.removePill = async (id) => { if(confirm('Delete medication?')) await deleteDoc(doc(db, `users/${userId}/pills/${id}`)); };
+
+        // RENDER ENGINE
+        function render() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('todayDate').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+            // 1. Manage Screen
+            document.getElementById('manageList').innerHTML = userPills.map(p => `
+                <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100">
+                    <span class="font-bold text-slate-700">${p.name}</span>
+                    <button onclick="removePill('${p.id}')" class="text-xs font-bold text-red-400 uppercase">Delete</button>
+                </div>
+            `).join('');
+
+            // 2. Track Screen
+            ['morning', 'afternoon', 'night'].forEach(slot => {
+                document.getElementById(`list-${slot}`).innerHTML = userPills.map(p => {
+                    const entry = globalHistory.find(h => h.id === `${today}_${p.id}_${slot}`);
+                    return `
+                        <div class="bg-white p-4 rounded-3xl flex justify-between items-center shadow-sm border border-slate-50">
+                            <div>
+                                <div class="font-bold ${entry ? 'text-slate-400 line-through' : 'text-slate-800'}">${p.name}</div>
+                                ${entry ? `<div class="text-[10px] text-emerald-500 font-black">TAKEN AT ${entry.displayTime}</div>` : ''}
+                            </div>
+                            <div class="check-circle ${entry ? 'checked' : ''}" onclick="togglePill('${p.id}', '${p.name}', '${slot}')">
+                                ${entry ? '✓' : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            // 3. Stats Screen
+            document.getElementById('activityLog').innerHTML = globalHistory.slice(0, 15).map(h => `
+                <div class="bg-white p-4 rounded-2xl log-card shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-black text-slate-400 uppercase">${h.timeSlot} • ${h.date}</div>
+                        <div class="font-bold text-slate-800">${h.pillName}</div>
+                    </div>
+                    <div class="text-sm font-bold text-indigo-600">${h.displayTime}</div>
+                </div>
+            `).join('') || '<div class="text-center p-10 text-slate-400">No records found.</div>';
+        }
+    </script>
 </body>
 </html>
