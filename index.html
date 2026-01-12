@@ -2,181 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PillTracker Pro</title>
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        :root { --primary: #1a73e8; --danger: #d93025; --success: #34a853; --bg: #f8f9fa; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
-        .container { max-width: 500px; margin: auto; padding: 20px; }
+        :root { 
+            --primary: #1a73e8; --morning: #ff9800; --afternoon: #03a9f4; --night: #3f51b5;
+            --success: #34a853; --bg: #f1f3f4; 
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: #202124; }
         
+        .container { max-width: 500px; margin: auto; padding: 16px; }
+        h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+
         /* Navigation */
-        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #ddd; z-index: 100; }
-        nav button { background: none; border: none; color: #666; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        nav button.active { color: var(--primary); font-weight: bold; }
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #dadce0; z-index: 1000; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        nav button { background: none; border: none; color: #5f6368; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        nav button.active { color: var(--primary); }
+        nav .icon { font-size: 20px; }
 
         /* Screens */
-        .screen { display: none; }
+        .screen { display: none; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* UI Elements */
-        .card { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .input-row { display: flex; gap: 8px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .btn-add { padding: 0 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; }
+        /* Cards & Inputs */
+        .card { background: white; padding: 16px; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .input-group { display: flex; gap: 8px; margin-bottom: 16px; }
+        input { flex: 1; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-add { padding: 0 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; }
+
+        /* Time Section Headers */
+        .time-header { display: flex; align-items: center; gap: 8px; font-weight: 700; margin: 24px 0 12px 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .morning { color: var(--morning); }
+        .afternoon { color: var(--afternoon); }
+        .night { color: var(--night); }
+
+        /* Pill Rows */
+        .pill-item { display: flex; justify-content: space-between; align-items: center; }
+        .pill-name { font-weight: 500; font-size: 17px; }
         
-        /* Pill Items */
-        .pill-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
-        .delete-btn { color: var(--danger); font-size: 13px; cursor: pointer; background: #fff5f5; border: 1px solid #ffcccc; padding: 4px 8px; border-radius: 4px; }
-        
-        /* Toggle Switch */
-        .toggle { width: 46px; height: 24px; background: #e0e0e0; border-radius: 12px; position: relative; cursor: pointer; transition: 0.3s; }
-        .toggle.on { background: var(--success); }
-        .toggle-circle { width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .toggle.on .toggle-circle { left: 24px; }
-        
-        /* Calendar Grid */
-        .history-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
-        .day-box { aspect-ratio: 1/1; background: #eee; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; }
-        .day-box.done { background: var(--success); color: white; }
-        .empty-state { text-align: center; color: #888; margin-top: 40px; }
+        /* Checkbox Toggle (Mobile Friendly) */
+        .check-circle { 
+            width: 32px; height: 32px; border: 2px solid #dadce0; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .check-circle.checked { background: var(--success); border-color: var(--success); color: white; }
+        .check-circle.checked::after { content: '✓'; font-weight: bold; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+        .dot { width: 100%; aspect-ratio: 1; border-radius: 4px; background: #e8eaed; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+        .dot.active { background: var(--success); color: white; }
+
+        .delete-btn { color: #d93025; font-size: 12px; padding: 4px; cursor: pointer; opacity: 0.7; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="screen-add" class="screen active">
-        <h2>My Medications</h2>
-        <div class="input-row">
-            <input type="text" id="pillInput" placeholder="Enter pill name...">
+        <h2>My Meds</h2>
+        <div class="input-group">
+            <input type="text" id="pillInput" placeholder="Pill name...">
             <button class="btn-add" onclick="addPill()">Add</button>
         </div>
         <div id="manageList"></div>
     </div>
 
     <div id="screen-track" class="screen">
-        <h2>Daily Tracker</h2>
-        <p id="todayDate" style="color: #666;"></p>
-        <div id="dailyList"></div>
+        <h2>Daily Track</h2>
+        <p id="todayDate"></p>
+        
+        <div class="time-header morning">☀️ Morning</div>
+        <div id="list-morning"></div>
+
+        <div class="time-header afternoon">🌤️ Afternoon</div>
+        <div id="list-afternoon"></div>
+
+        <div class="time-header night">🌙 Night</div>
+        <div id="list-night"></div>
     </div>
 
-    <div id="screen-overview" class="screen">
-        <h2>Monthly Progress</h2>
-        <div id="overviewContent"></div>
+    <div id="screen-stats" class="screen">
+        <h2>Overview</h2>
+        <div id="statsContent"></div>
     </div>
 </div>
 
 <nav>
-    <button onclick="showScreen('add')" id="nav-add" class="active"><span>💊</span>Meds</button>
-    <button onclick="showScreen('track')" id="nav-track"><span>✅</span>Track</button>
-    <button onclick="showScreen('overview')" id="nav-overview"><span>📊</span>Stats</button>
+    <button onclick="showScreen('add')" id="nav-add" class="active"><span class="icon">💊</span>Meds</button>
+    <button onclick="showScreen('track')" id="nav-track"><span class="icon">✅</span>Track</button>
+    <button onclick="showScreen('stats')" id="nav-stats"><span class="icon">📊</span>Stats</button>
 </nav>
 
 <script>
-    // State initialization
-    let pills = JSON.parse(localStorage.getItem('pills')) || [];
-    let history = JSON.parse(localStorage.getItem('pillHistory')) || {};
+    let pills = JSON.parse(localStorage.getItem('pills_v2')) || [];
+    let history = JSON.parse(localStorage.getItem('history_v2')) || {};
 
-    function showScreen(screenId) {
+    const times = ['morning', 'afternoon', 'night'];
+
+    function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById('screen-' + screenId).classList.add('active');
-        document.getElementById('nav-' + screenId).classList.add('active');
+        document.getElementById('screen-'+id).classList.add('active');
+        document.getElementById('nav-'+id).classList.add('active');
         render();
     }
 
     function addPill() {
-        const input = document.getElementById('pillInput');
-        const name = input.value.trim();
-        if(name && !pills.includes(name)) {
-            pills.push(name);
-            input.value = '';
+        const val = document.getElementById('pillInput').value.trim();
+        if(val) {
+            pills.push(val);
+            document.getElementById('pillInput').value = '';
             save();
         }
     }
 
-    function deletePill(name) {
-        if(confirm(`Remove ${name}?`)) {
-            pills = pills.filter(p => p !== name);
+    function deletePill(index) {
+        if(confirm('Delete this medication?')) {
+            pills.splice(index, 1);
             save();
         }
     }
 
-    function togglePill(pillName) {
+    function togglePill(pillName, time) {
         const today = new Date().toISOString().split('T')[0];
-        if (!history[today]) history[today] = {};
-        history[today][pillName] = !history[today][pillName];
+        const key = `${today}_${pillName}_${time}`;
+        history[key] = !history[key];
         save();
     }
 
     function save() {
-        localStorage.setItem('pills', JSON.stringify(pills));
-        localStorage.setItem('pillHistory', JSON.stringify(history));
+        localStorage.setItem('pills_v2', JSON.stringify(pills));
+        localStorage.setItem('history_v2', JSON.stringify(history));
         render();
     }
 
     function render() {
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-        // 1. Manage Screen
-        const manageList = document.getElementById('manageList');
-        if (pills.length === 0) {
-            manageList.innerHTML = `<div class="empty-state">No pills added yet.</div>`;
-        } else {
-            manageList.innerHTML = pills.map(p => `
-                <div class="card pill-row">
-                    <span>${p}</span>
-                    <button class="delete-btn" onclick="deletePill('${p}')">Delete</button>
-                </div>
-            `).join('');
-        }
+        // Render Manage
+        document.getElementById('manageList').innerHTML = pills.map((p, i) => `
+            <div class="card pill-item">
+                <span class="pill-name">${p}</span>
+                <span class="delete-btn" onclick="deletePill(${i})">Remove</span>
+            </div>
+        `).join('');
 
-        // 2. Daily Tracking Screen
-        const dailyList = document.getElementById('dailyList');
-        if (pills.length === 0) {
-            dailyList.innerHTML = `<div class="empty-state">Add meds in the first tab to track them here.</div>`;
-        } else {
-            dailyList.innerHTML = pills.map(p => {
-                const isTaken = history[today] && history[today][p];
+        // Render Tracking
+        times.forEach(t => {
+            const container = document.getElementById('list-' + t);
+            container.innerHTML = pills.map(p => {
+                const key = `${today}_${p}_${t}`;
+                const checked = history[key];
                 return `
-                    <div class="card pill-row">
-                        <strong>${p}</strong>
-                        <div class="toggle ${isTaken ? 'on' : ''}" onclick="togglePill('${p}')">
-                            <div class="toggle-circle"></div>
-                        </div>
+                    <div class="card pill-item">
+                        <span class="pill-name">${p}</span>
+                        <div class="check-circle ${checked ? 'checked' : ''}" onclick="togglePill('${p}', '${t}')"></div>
                     </div>
                 `;
             }).join('');
-        }
+        });
 
-        // 3. Overview Screen (Past 14 days)
-        const overview = document.getElementById('overviewContent');
-        if (pills.length === 0) {
-            overview.innerHTML = `<div class="empty-state">No data to display.</div>`;
-        } else {
-            overview.innerHTML = pills.map(p => {
-                let boxes = '';
-                for(let i=13; i>=0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    const dateStr = d.toISOString().split('T')[0];
-                    const taken = history[dateStr] && history[dateStr][p];
-                    const dayName = d.toLocaleDateString('en-US', {weekday: 'narrow'});
-                    boxes += `<div class="day-box ${taken ? 'done' : ''}"><div>${dayName}</div><b>${d.getDate()}</b></div>`;
-                }
-                return `
-                    <div class="card">
-                        <strong style="display:block; margin-bottom:10px;">${p}</strong>
-                        <div class="history-grid">${boxes}</div>
-                    </div>
-                `;
-            }).join('');
-        }
+        // Render Stats (Last 7 days)
+        let statsHTML = '';
+        pills.forEach(p => {
+            let grid = '';
+            for(let i=6; i>=0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dStr = d.toISOString().split('T')[0];
+                const dayName = d.toLocaleDateString('en-US', {weekday: 'narrow'});
+                // Check if all 3 times were taken (optional logic, showing morning for simplicity here)
+                const isTaken = history[`${dStr}_${p}_morning`] || history[`${dStr}_${p}_afternoon`] || history[`${dStr}_${p}_night`];
+                grid += `<div class="dot ${isTaken ? 'active' : ''}">${dayName}</div>`;
+            }
+            statsHTML += `<div class="card"><strong>${p}</strong><div class="stats-grid">${grid}</div></div>`;
+        });
+        document.getElementById('statsContent').innerHTML = statsHTML || '<p>No data yet.</p>';
     }
 
-    // Initial render
     render();
 </script>
 </body>
